@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Fake Kamera Test</title>
+  <script>
+    navigator.getUserMedia = (navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia);
+  </script>
+  <!--suppress HtmlUnknownTarget -->
+  <script defer src="fake-kamera.js"></script>
+</head>
+
+<body>
+<div id="root"/>
+<div id="messages"/>
+</body>
+</html>
