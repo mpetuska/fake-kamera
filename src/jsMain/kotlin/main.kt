@@ -54,7 +54,7 @@ import org.w3c.dom.mediacapture.MediaStream
 import org.w3c.dom.mediacapture.MediaStreamConstraints
 import org.w3c.dom.mediacapture.VIDEOINPUT
 
-fun main() {
+actual suspend fun main(vararg args: String) {
   renderComposable(rootElementId = "root") {
     Style(AppStyle)
     Div(attrs = { classes(AppStyle.cotainer) }) {

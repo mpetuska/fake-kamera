@@ -6,12 +6,16 @@ import java.awt.image.DataBufferByte
 import java.io.File
 import java.io.IOException
 import org.opencv.core.Mat
-import org.opencv.core.Size
-import org.opencv.imgproc.Imgproc
 
-class FakeCam(device: String, val width: Int, val height: Int) : AutoCloseable {
+class FakeCam(device: String, private val width: Int, private val height: Int) : AutoCloseable {
   private val fd: Int
-  constructor(device: Int, width: Int, height: Int) : this("/dev/video$device", width, height)
+  private val channels: Int = 3
+  constructor(
+      device: String,
+      initialFrame: Mat
+  ) : this(device, initialFrame.width(), initialFrame.height()) {
+    writeFrame(initialFrame)
+  }
   init {
     fd = open(device, width, height)
     println("FD: $fd")
@@ -23,21 +27,30 @@ class FakeCam(device: String, val width: Int, val height: Int) : AutoCloseable {
 
   fun writeFrame(frame: ByteArray): Boolean = writeFrame(fd, frame)
 
-  fun writeMat(mat: Mat) {
+  fun writeFrame(mat: Mat) {
+    require(mat.width() == width) {
+      "FrameWidth[${mat.width()}] does not match CameraWidth[$width]"
+    }
+    require(mat.height() == height) {
+      "FrameHeight[${mat.height()}] does not match CameraHeight[$height]"
+    }
+    require(mat.channels() == channels) {
+      "FrameChannels[${mat.channels()}] does not match CameraChannels[$channels]"
+    }
+    println("${width}x${height} ${mat.size()}")
     val frame = ByteArray(width * height * 3)
     frame.drawImage(mat.toBufferedImage())
     writeFrame(frame)
   }
 
   private fun Mat.toBufferedImage(): BufferedImage {
-    val resizedMat = Mat()
-    Imgproc.resize(this, resizedMat, Size(width.toDouble(), height.toDouble()))
-    val image = BufferedImage(resizedMat.width(), resizedMat.height(), BufferedImage.TYPE_3BYTE_BGR)
+    val image = BufferedImage(width(), height(), BufferedImage.TYPE_3BYTE_BGR)
     val data = (image.raster.dataBuffer as DataBufferByte).data
-    resizedMat.get(0, 0, data)
+    get(0, 0, data)
     return image
   }
 
+  // https://github.com/Harium/v4l2fakecam-java/blob/master/src/main/java/examples/CameraExample.java#L66
   private fun ByteArray.drawImage(image: BufferedImage) {
     // Draw at center
     for (y in 0 until image.height) {
@@ -46,7 +59,6 @@ class FakeCam(device: String, val width: Int, val height: Int) : AutoCloseable {
 
         // Flip Horizontally
         val color = Color(image.getRGB(width - 1 - x, y))
-        //         val color = Color(image.getRGB(x, y));
         val r: Int = color.red
         val g: Int = color.green
         val b: Int = color.blue

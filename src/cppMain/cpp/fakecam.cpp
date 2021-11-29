@@ -7,6 +7,7 @@
 #include <linux/videodev2.h>
 #include "fakecam.h"
 
+// https://github.com/Harium/v4l2fakecam-java/blob/master/library/FakeCam.c
 // More Formats at: https://linuxtv.org/downloads/v4l-dvb-apis/uapi/v4l/videodev.html
 JNIEXPORT jint JNICALL Java_dev_petuska_fake_kamera_jni_FakeCam_open(JNIEnv* env, jobject obj, jstring device, jint width, jint height)
 {
@@ -25,11 +26,11 @@ JNIEXPORT jint JNICALL Java_dev_petuska_fake_kamera_jni_FakeCam_open(JNIEnv* env
     v.fmt.pix.width = width;
     v.fmt.pix.height = height;
     v.fmt.pix.pixelformat = V4L2_PIX_FMT_RGB24;
-    v.fmt.pix.field = V4L2_FIELD_NONE;
+//    v.fmt.pix.field = V4L2_FIELD_NONE;
     //v.fmt.pix.field = V4L2_FIELD_ANY;
     v.fmt.pix.bytesperline = width * 3;
     v.fmt.pix.sizeimage = width * height * 3;
-    v.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
+    v.fmt.pix.colorspace =  V4L2_COLORSPACE_SRGB;
 
     if (ioctl(dev_fd, VIDIOC_S_FMT, &v) == -1) {
         return -3;

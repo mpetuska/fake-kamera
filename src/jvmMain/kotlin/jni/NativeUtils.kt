@@ -11,6 +11,7 @@ import java.lang.reflect.Field
  * Simple library class for working with JNI (Java Native Interface)
  *
  * @see http://frommyplayground.com/how-to-load-native-jni-library-from-jar
+ * @see https://github.com/sarxos/v4l4j/blob/master/src/main/java/com/github/sarxos/v4l4j/NativeUtils.java
  *
  * @author Adam Heirnich <adam></adam>@adamh.cz>, http://www.adamh.cz
  */

@@ -6,5 +6,3 @@ plugins {
 rootProject.name = "fake-kamera"
 
 refreshVersions { extraArtifactVersionKeyRules(file("versions.rules")) }
-
-include(":jni")
