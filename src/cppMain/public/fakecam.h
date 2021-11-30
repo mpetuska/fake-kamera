@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (Ljava/lang/String;II)I
  */
 JNIEXPORT jint JNICALL Java_dev_petuska_fake_kamera_jni_FakeCam_open
-  (JNIEnv *, jobject, jstring, jint, jint);
+  (JNIEnv *, jobject, jstring, jint, jint, jint);
 
 /*
  * Class:     dev_petuska_fake_kamera_jni_FakeCam

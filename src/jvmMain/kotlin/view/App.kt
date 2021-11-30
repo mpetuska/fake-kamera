@@ -18,14 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import dev.petuska.fake.kamera.jni.FakeCam
 import dev.petuska.fake.kamera.store.selectState
+import dev.petuska.fake.kamera.util.rememberMutableStateOf
+import dev.petuska.fake.kamera.util.toBufferedImage
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
@@ -46,20 +50,41 @@ fun App() {
     val scope = rememberCoroutineScope()
     val inputDevice by selectState { inputDevice }
     val outputDevice by selectState { outputDevice }
+    var streamJob by rememberMutableStateOf<Job?> { null }
+    var previewJob by rememberMutableStateOf<Job?> { null }
     MaterialTheme {
       Column {
         CameraSelector()
         FakeCameraCreator()
         Button(
             onClick = {
-              image = null
               scope.launch { image = inputDevice?.let { capture(it) } }
-            }) { Text("Selfie!") }
+              image = null
+            },
+            enabled = previewJob == null && streamJob == null) { Text("Selfie!") }
         Button(
             onClick = {
+              streamJob?.cancel()?.also { streamJob = null }
+                  ?: run { streamJob = scope.launch { stream(inputDevice!!, outputDevice!!) } }
               image = null
-              scope.launch { stream(inputDevice!!, outputDevice!!) }
-            }) { Text("Start") }
+            },
+            enabled = previewJob == null) {
+          Text(if (streamJob == null) "Stream" else "Stop Stream")
+        }
+        Button(
+            onClick = {
+              previewJob?.cancel()?.also { previewJob = null }
+                  ?: run {
+                    previewJob =
+                        scope.launch {
+                          stream(inputDevice!!, outputDevice!!) { image = it.toBufferedImage() }
+                        }
+                  }
+              image = null
+            },
+            enabled = streamJob == null) {
+          Text(if (previewJob == null) "Preview" else "Stop Preview")
+        }
         image?.let {
           Image(
               it.toComposeImageBitmap(),
@@ -71,8 +96,13 @@ fun App() {
   }
 }
 
-private fun CoroutineScope.stream(inputDevice: String, outputDevice: String): Job {
-  val input = VideoCapture(inputDevice)
+private fun CoroutineScope.stream(
+    inputDevice: String,
+    outputDevice: String,
+    onFrame: ((Mat) -> Unit)? = null
+): Job {
+  val fps = 60
+  val input = getVideoCapture(inputDevice)
   val output =
       FakeCam(
           outputDevice,
@@ -80,8 +110,9 @@ private fun CoroutineScope.stream(inputDevice: String, outputDevice: String): Jo
       )
   return launch(Dispatchers.Default) {
     while (isActive) {
+      delay((1000 / fps).toLong())
       val mat = MatOfByte().also(input::read)
-      output.writeFrame(mat)
+      onFrame?.invoke(mat) ?: output.writeFrame(mat)
     }
   }
       .apply {
@@ -92,13 +123,21 @@ private fun CoroutineScope.stream(inputDevice: String, outputDevice: String): Jo
       }
 }
 
+fun getVideoCapture(device: String) =
+    VideoCapture(device).apply {
+      set(Videoio.CAP_PROP_FRAME_WIDTH, 720.0)
+      set(Videoio.CAP_PROP_FRAME_HEIGHT, 1280.0)
+      set(Videoio.CAP_PROP_FPS, 60.0)
+      set(Videoio.CAP_PROP_CHANNEL, 3.0)
+    }
+
 private suspend fun capture(inputDevice: String): BufferedImage {
   val mat =
       withContext(Dispatchers.IO) {
-        val input = VideoCapture(inputDevice)
+        val input = getVideoCapture(inputDevice)
         val mat = MatOfByte().also(input::read)
-        input.release()
-        mat
+        println("${mat.size()}")
+        mat.also { input.release() }
       }
   return with(mat) {
     val image = BufferedImage(width(), height(), BufferedImage.TYPE_3BYTE_BGR)
