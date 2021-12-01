@@ -30,13 +30,13 @@ fun Mat.to2dBytes(): ByteArray {
   val barr = ByteArray(height() * width() * 2)
   for (y in 0 until height()) {
     for (x in 0 until ceil(width() * 2 / 2.0).toInt()) {
-      barr[(y * width() * 2) + x * 2] = this[x, y, 0].toInt().toByte()
+      barr[(y * width() * 2) + x * 2] = this[y, x, 0].toInt().toByte()
     }
     for (x in 0 until ceil(width() * 2 / 4.0).toInt()) {
-      barr[(y * width() * 2) + x * 4 + 1] = this[x * 2, y, 1].toInt().toByte()
+      barr[(y * width() * 2) + x * 4 + 1] = this[y, x * 2, 1].toInt().toByte()
     }
     for (x in 0 until floor(width() * 2 / 4.0).toInt()) {
-      barr[(y * width() * 2) + x * 4 + 3] = this[x * 2, y, 2].toInt().toByte()
+      barr[(y * width() * 2) + x * 4 + 3] = this[y, x * 2, 2].toInt().toByte()
     }
   }
   return barr
@@ -53,8 +53,8 @@ fun Mat.toImageBitmap(): ImageBitmap = toBufferedImage().toComposeImageBitmap()
 
 fun Mat.toPainter(): Painter = toBufferedImage().toPainter()
 
-operator fun Mat.get(x: Int, y: Int, c: Int) = this[y, x][c]
+operator fun Mat.get(y: Int, x: Int, c: Int) = this[y, x][c]
 
-operator fun Mat.set(x: Int, y: Int, c: Int, value: Double) {
+operator fun Mat.set(y: Int, x: Int, c: Int, value: Double) {
   this[y, x][c] = value
 }

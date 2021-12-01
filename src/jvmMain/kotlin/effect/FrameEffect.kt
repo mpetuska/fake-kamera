@@ -1,5 +1,7 @@
 package dev.petuska.fake.kamera.effect
 
+import dev.petuska.fake.kamera.util.get
+import dev.petuska.fake.kamera.util.set
 import kotlin.random.Random
 import org.opencv.core.Core
 import org.opencv.core.Mat
@@ -56,10 +58,10 @@ object HologramEffect : FrameEffect {
     val rnd = Random(1)
     for (y in 0 until height()) {
       if (y % (bandLength + bandGap) < bandLength) {
+        // TODO this[y,:,:] = this[y,:,:] * (rnd.nextDouble(0.5) - 0.1)
         for (x in 0 until width()) {
-          // TODO this[y,:,:] = this[y,:,:] * (rnd.nextDouble(0.5) - 0.1)
           for (c in 0 until this[y, x].size) {
-//            this[x, y, c] = this[x, y, c] * (rnd.nextDouble(0.5) - 0.1)
+            this[y, x, c] = this[y, x, c] * (rnd.nextDouble(0.5) - 0.1)
           }
         }
       }
