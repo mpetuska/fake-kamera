@@ -17,5 +17,6 @@ fun CameraSelector() {
       items = items,
       selected = selected,
       onSelectionChange = { dispatch(AppAction.SetInputDevice(it)) },
+      itemLabelBuilder = { it?.path.toString() },
       label = { Text("Select Input Device") })
 }

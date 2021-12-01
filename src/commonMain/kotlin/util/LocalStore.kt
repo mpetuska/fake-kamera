@@ -30,14 +30,14 @@ inline operator fun <T> Store<T>.invoke(crossinline content: @Composable () -> U
 @Composable fun rememberDispatcher() = getStore<Any>().dispatch
 
 @Composable
-inline fun <reified TState, TSlice> select(
+inline fun <reified TState, TSlice> selectState(
     crossinline selector: @DisallowComposableCalls TState.() -> TSlice
 ): State<TSlice> {
-  return getStore<TState>().select(selector)
+  return getStore<TState>().selectState(selector)
 }
 
 @Composable
-inline fun <TState, TSlice> Store<TState>.select(
+inline fun <TState, TSlice> Store<TState>.selectState(
     crossinline selector: @DisallowComposableCalls TState.() -> TSlice
 ): State<TSlice> {
   val result = remember { mutableStateOf(state.selector()) }

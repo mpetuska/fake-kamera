@@ -4,7 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -37,7 +37,7 @@ fun <T> ExposedDropdownMenu(
     label: @Composable (() -> Unit)? = null
 ) {
   var expanded by remember { mutableStateOf(false) }
-  Box(modifier = modifier.fillMaxWidth().wrapContentSize(Alignment.TopStart)) {
+  Box(modifier = modifier.wrapContentWidth(Alignment.Start)) {
     OutlinedTextField(
         value = itemLabelBuilder(selected),
         label = label,

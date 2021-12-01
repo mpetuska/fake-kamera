@@ -8,17 +8,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import dev.petuska.fake.kamera.store.AppAction
 import dev.petuska.fake.kamera.store.outputDeviceName
 import dev.petuska.fake.kamera.store.selectState
+import dev.petuska.fake.kamera.util.VideoDevice
 import dev.petuska.fake.kamera.util.rememberDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.kodein.di.compose.rememberInstance
 
 @Composable
 fun FakeCameraCreator() {
   val outputDevice by selectState { outputDevice }
   val scope = rememberCoroutineScope()
   val dispatch = rememberDispatcher()
+  val defaultOutputDevice: VideoDevice by rememberInstance(null) { outputDeviceName }
   Button(
       onClick = {
         scope.launch {
@@ -33,7 +36,7 @@ fun FakeCameraCreator() {
                     if (it.exitValue() != 0) {
                       error("Failed to create a fake camera")
                     } else {
-                      dispatch(AppAction.SetOutputDevice(outputDeviceName))
+                      dispatch(AppAction.SetOutputDevice(defaultOutputDevice))
                     }
                   }
             } else {
