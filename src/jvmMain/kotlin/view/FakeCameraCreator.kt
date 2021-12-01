@@ -5,7 +5,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import dev.petuska.fake.kamera.service.ShellService
 import dev.petuska.fake.kamera.store.AppAction
@@ -23,10 +22,9 @@ import org.kodein.di.compose.rememberInstance
 @Composable
 fun FakeCameraCreator() {
   val outputDevice by selectState { outputDevice }
-  val scope = rememberCoroutineScope()
   val dispatch = rememberDispatcher()
   val defaultOutputDevice: VideoDevice by rememberInstance(null) { outputDeviceName }
-  var password by rememberMutableStateOf<String?> { null }
+  var password by rememberMutableStateOf<String?> { System.getenv("FK_PASSWORD") }
   var requestPassword by rememberMutableStateOf { false }
   var running by rememberMutableStateOf { false }
   LaunchedEffect(password, outputDevice, running) {
@@ -71,7 +69,10 @@ fun FakeCameraCreator() {
         password = it
         requestPassword = false
       },
-      onDismiss = { requestPassword = false })
+      onDismiss = {
+        requestPassword = false
+        running = false
+      })
   Button(
       enabled = !running,
       onClick = { running = true },

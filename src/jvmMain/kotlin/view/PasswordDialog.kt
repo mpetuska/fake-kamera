@@ -1,5 +1,6 @@
 package dev.petuska.fake.kamera.view
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,17 +12,19 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -33,40 +36,63 @@ import dev.petuska.fake.kamera.util.rememberMutableStateOf
 fun PasswordDialog(show: Boolean, onSubmit: (String) -> Unit, onDismiss: () -> Unit) {
   val user = remember { System.getProperty("user.name") }
   var password by rememberMutableStateOf { "" }
+  val submit =
+      remember(password) {
+        fun(it: KeyEvent): Boolean {
+          return when (it.key) {
+            Key.Enter -> {
+              onSubmit(password)
+              true
+            }
+            Key.Escape -> {
+              onDismiss()
+              false
+            }
+            else -> false
+          }
+        }
+      }
   if (show) {
     AlertDialog(
-        onDismissRequest = {},
+        onDismissRequest = onDismiss,
         title = { Text("Enter a password for $user") },
-        text = { PasswordInputField(password) { password = it } },
+        modifier = Modifier.onKeyEvent(submit),
+        text = {
+          Box { PasswordInputField(password, { password = it }, Modifier.onKeyEvent(submit)) }
+        },
         confirmButton = { Button(onClick = { onSubmit(password) }) { Text("Confirm") } },
         dismissButton = { OutlinedButton(onClick = onDismiss) { Text("Cancel") } })
   }
 }
 
 @Composable
-private fun PasswordInputField(value: String, onChange: (String) -> Unit) {
+private fun PasswordInputField(
+    value: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
   var passwordVisibility: Boolean by remember { mutableStateOf(false) }
   OutlinedTextField(
       value = value,
       onValueChange = onChange,
-      modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
+      modifier = modifier.padding(top = 16.dp).fillMaxWidth(),
       label = { Text("Password") },
       placeholder = { Text(text = "Password") },
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-      colors =
-          TextFieldDefaults.outlinedTextFieldColors(
-              //              focusedBorderColor = Color.Purple500,
-              unfocusedBorderColor = Color.Black,
-              placeholderColor = Color.Gray,
-              textColor = Color.Black),
+      //      colors =
+      //          TextFieldDefaults.outlinedTextFieldColors(
+      //              //              focusedBorderColor = Color.Purple500,
+      //              unfocusedBorderColor = Color.Black,
+      //              placeholderColor = Color.Gray,
+      //              textColor = Color.Black),
       singleLine = true,
-      isError = true,
+      //      isError = true,
       visualTransformation =
           if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
       trailingIcon = {
-        val image = if (passwordVisibility) Icons.Filled.Menu else Icons.Outlined.Menu
+        val image = if (passwordVisibility) Icons.Filled.Clear else Icons.Outlined.Edit
         IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-          Icon(imageVector = image, "")
+          Icon(imageVector = image, if (passwordVisibility) "hide-password" else "show-password")
         }
       })
 }
