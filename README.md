@@ -1,6 +1,10 @@
 ```bash
 sudo apt install v4l2loopback-dkms v4l2loopback-utils ffmpeg
+sudo dnf -y install ffmpeg v4l2loopback
+
 sudo apt install libopencv-dev # to build
+sudo dnf install opencv-devel # to build
+
 ```
 
 ```bash

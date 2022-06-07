@@ -1,0 +1,2 @@
+headers = linux/videodev2.h
+package = videodev2
