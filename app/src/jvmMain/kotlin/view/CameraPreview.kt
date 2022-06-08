@@ -49,8 +49,8 @@ fun CameraPreview(
       Image(
         bitmap = it,
         contentDescription = "camera-preview",
-//        alpha = if (enabled) 1.0f else 0.25f,
-        alpha = 1.0f,
+        alpha = if (enabled) 1.0f else 0.25f,
+//        alpha = 1.0f,
         modifier = Modifier.fillMaxSize().padding(0.dp)
       )
     }

@@ -24,12 +24,13 @@ fun main(vararg args: String) {
   println(args.toList())
   OpenCV.loadLocally()
   val di = DI {
+    val fps = 30
     bind {
       scoped(AppScope).factory { data: WithLogFactory<String> ->
         VideoDeviceInput(
           factory = data.factory,
           path = data.data,
-          fps = 60,
+          fps = fps,
           width = 640,
           height = 480,
           channels = 3,
@@ -41,7 +42,7 @@ fun main(vararg args: String) {
         VideoDeviceOutput(
           factory = data.factory,
           path = data.data,
-          fps = 60,
+          fps = fps,
           width = 640,
           height = 480,
           channels = 2,

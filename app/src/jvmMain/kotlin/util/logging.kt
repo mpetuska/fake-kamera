@@ -3,6 +3,7 @@ package dev.petuska.fake.kamera.util
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import org.kodein.log.*
+import org.kodein.log.filter.entry.minimumLevel
 import org.kodein.log.frontend.defaultLogFrontend
 
 data class LogMessage(
@@ -32,12 +33,15 @@ private val LoggerLocal = staticCompositionLocalOf<Logger> { error("undefined") 
 @Composable
 fun LogProvider(content: @Composable () -> Unit) {
   val log = remember { mutableStateListOf<LogMessage>() }
+  val logLevel = System.getenv("LOG_LEVEL")
+    ?.uppercase()?.runCatching(Logger.Level::valueOf)?.getOrNull() ?: Logger.Level.WARNING
   val factory = remember(log) {
     LoggerFactory(
       defaultLogFrontend,
       UILogFrontend {
         log.add(it)
-      }
+      },
+      filters = listOf(minimumLevel(logLevel))
     )
   }
   val defaultLogger = remember { factory.newLogger("", "UI") }
