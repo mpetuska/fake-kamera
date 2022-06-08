@@ -1,7 +1,6 @@
 package dev.petuska.fake.kamera.effect
 
 import dev.petuska.fake.kamera.util.*
-import org.jetbrains.kotlinx.multik.ndarray.data.set
 import org.opencv.core.*
 import org.opencv.dnn.Dnn
 import org.opencv.imgproc.Imgproc
@@ -22,87 +21,52 @@ object HologramEffect : FrameEffect {
     cvNet.setInput(blob)
     val results = cvNet.forward().get(0, 0)
 
-    val segmentLogits = Mat.zeros(frame.size(), frame.type()).apply {
-    }
+    val segmentLogits = Mat.zeros(frame.size(), frame.type()).apply {}
   }
 
   override fun invoke(frame: Mat): Mat {
-    val holo = frame
-//      .dilate()
-//      .blur()
-//      .tint()
+    val holo = frame.clone()
+      .dilate()
+      .blur()
+      .tint()
       .halftone()
-//      .ghosting()
-//    return Mat { Core.addWeighted(frame, 0.5, holo, 0.6, 0.0, it) }
-    return holo
+      .ghosting()
+    return Mat { Core.addWeighted(frame, 0.5, holo, 0.6, 0.0, it) }
   }
 
-  private fun Mat.tint() = clone { mat ->
-    Imgproc.cvtColor(this, mat, Imgproc.COLORMAP_WINTER)
+  private fun Mat.tint() = also { mat ->
+    Imgproc.applyColorMap(this, mat, Imgproc.COLORMAP_WINTER)
   }
 
-  private fun Mat.halftone() = clone { mat ->
-    val bandLength = 4
-    val bandGap = 6
-    val h = mat.height()
-    val w = mat.width()
-    val c = mat.channels()
+  private fun Mat.halftone() = also { mat ->
+    val bandLength = 2
+    val bandGap = 3
+    val h = height()
+    val w = width()
     for (y in 0 until h) {
       if (y % (bandLength + bandGap) < bandLength) {
         // holo[y, :, :] = holo[y, :, :] * np.random.uniform(0.1, 0.3)
-        val darken = Random.nextDouble(0.1, 0.3)
+        val darken = Random.nextDouble(0.1, 0.5)
         for (x in 0 until w) {
-          for (z in 0 until c) {
-            mat[y, x, z] *= darken
-          }
+          mat[y, x] = mat[y, x].map { it * darken }.toDoubleArray()
         }
       }
     }
   }
 
-  private fun Mat.ghosting() = clone { mat ->
-    Core.addWeighted(this, 0.2, shift(5, 5), 0.8, 0.0, mat)
-    Core.addWeighted(mat, 0.4, shift(-5, -5), 0.6, 0.0, mat)
+  private fun Mat.ghosting() = also { mat ->
+    Core.addWeighted(this, 0.2, clone().shift(5, 5), 0.8, 0.0, mat)
+    Core.addWeighted(mat, 0.4, clone().shift(-5, -5), 0.6, 0.0, mat)
   }
 
-  private fun Mat.shift(dx: Int, dy: Int): Mat = toD2Array().also { mat ->
-    // shift_img from: https://stackoverflow.com/a/53140617
-    //    img = np.roll(img, dy, axis=0)
-    //    img = np.roll(img, dx, axis=1)
-    val w = width()
-    val h = height()
-    val zero = DoubleArray(channels()) { 0.0 }
-    if (dy > 0) {
-      // img[:dy, :] = 0
-      for (y in 0 until dy) {
-        for (x in 0 until w) {
-          mat[y, x] = zero
-        }
-      }
-    } else if (dy < 0) {
-      // img[dy:, :] = 0
-      for (y in (h - dy) until h) {
-        for (x in 0 until w) {
-          mat[y, x] = zero
-        }
-      }
-    }
-    if (dx > 0) {
-      // img[:, :dx] = 0
-      for (y in 0 until h) {
-        for (x in 0 until dx) {
-          mat[y, x] = zero
-        }
-      }
-    } else if (dx < 0) {
-      // img[:, dx:] = 0
-      for (y in 0 until h) {
-        for (x in (w - dx) until w) {
-          mat[y, x] = zero
-        }
-      }
-    }
-  }.toMat(type())
+  private fun Mat.shift(dx: Int, dy: Int): Mat = also { mat ->
+    val warp: Mat = Mat.zeros(2, 3, CvType.CV_64FC1)
+    warp.put(0, 0, 1.0)
+    warp.put(1, 1, 1.0)
+    warp.put(0, 2, dx.toDouble())
+    warp.put(1, 2, dy.toDouble())
+    Imgproc.warpAffine(mat, mat, warp, mat.size())
+  }
 
   private fun Mat.blur() = clone { mat ->
     Imgproc.blur(this, mat, Size(30.0, 30.0))

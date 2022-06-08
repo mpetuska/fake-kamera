@@ -9,6 +9,8 @@ import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.mediacapture.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.js.json
 
 suspend fun main(vararg args: String) {
@@ -18,7 +20,7 @@ suspend fun main(vararg args: String) {
       var videoDevices by remember { mutableStateOf(listOf<MediaDeviceInfo>()) }
       val scope = rememberCoroutineScope()
       var camera by remember { mutableStateOf<MediaDeviceInfo?>(null) }
-      LaunchedEffect(null) { loadVideoDevices { videoDevices = it } }
+      LaunchedEffect(Unit) { loadVideoDevices { videoDevices = it } }
       H1 { Text("Fake Kamera Test") }
       CameraBox(camera)
       Div {
@@ -36,7 +38,22 @@ suspend fun main(vararg args: String) {
   }
 }
 
+@Suppress("UnusedPrivateMember")
+private suspend fun promptMediaAccess() = suspendCoroutine<Unit> { cont ->
+  window.navigator.getUserMedia(
+    MediaStreamConstraints(video = json()),
+    {
+      cont.resume(Unit)
+    },
+    {
+      console.error("Cannot access media devices", it)
+      cont.resume(Unit)
+    }
+  )
+}
+
 private suspend fun loadVideoDevices(onLoaded: (List<MediaDeviceInfo>) -> Unit) {
+//  promptMediaAccess()
   val devices =
     window.navigator.mediaDevices.enumerateDevices().await().filter {
       it.kind == MediaDeviceKind.VIDEOINPUT
@@ -145,9 +162,9 @@ private fun <T> CameraSelector(
         }
       ) { Text("Select a camera...") }
     }
-    devices.forEach {
+    devices.forEachIndexed { i, it ->
       val l = label(it)
-      Option(l, attrs = { if (selected == it) selected() }) { Text(l) }
+      Option(l, attrs = { if (selected == it) selected() }) { Text(l.takeIf(String::isNotBlank) ?: "$i") }
     }
   }
 }

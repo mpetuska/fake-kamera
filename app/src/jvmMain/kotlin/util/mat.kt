@@ -1,17 +1,18 @@
 @file:Suppress("TooManyFunctions")
+
 package dev.petuska.fake.kamera.util
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPainter
-import org.jetbrains.kotlinx.multik.api.d2array
-import org.jetbrains.kotlinx.multik.api.d3array
+import org.jetbrains.kotlinx.multik.api.d3arrayIndices
 import org.jetbrains.kotlinx.multik.api.mk
-import org.jetbrains.kotlinx.multik.ndarray.data.D2
 import org.jetbrains.kotlinx.multik.ndarray.data.D3
+import org.jetbrains.kotlinx.multik.ndarray.data.D3Array
 import org.jetbrains.kotlinx.multik.ndarray.data.NDArray
-import org.jetbrains.kotlinx.multik.ndarray.operations.forEachMultiIndexed
+import org.jetbrains.kotlinx.multik.ndarray.data.get
+import org.jetbrains.kotlinx.multik.ndarray.operations.toDoubleArray
 import org.opencv.core.Mat
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
@@ -63,58 +64,33 @@ fun Mat.toPainter(): Painter = toBufferedImage().toPainter()
 
 operator fun Mat.set(y: Int, x: Int, value: DoubleArray) {
   @Suppress("SpreadOperator")
-  put(x, y, *value)
+  put(y, x, *value)
 }
 
 operator fun Mat.get(y: Int, x: Int, z: Int): Double = this[y, x][z]
-
-operator fun Mat.set(y: Int, x: Int, z: Int, value: Double) {
-//  val arr = this[x, y] ?: DoubleArray(channels())
-//  arr[z] = value
-  this[y, x][z] = value
-}
 
 fun Mat.clone(builder: (mat: Mat) -> Unit): Mat = clone().apply(builder)
 fun Mat(builder: (mat: Mat) -> Unit): Mat = Mat().apply(builder)
 
 fun Mat.toD3Array(): NDArray<Double, D3> {
   /*
-  * i = x + WIDTH * (y + HEIGHT * z);
-  * z = Math.round(i / (WIDTH * HEIGHT));
-  * y = Math.round((i - z * WIDTH * HEIGHT) / WIDTH);
+  * i = x + WIDTH * (y + HEIGHT * z)
+  * z = i / (WIDTH * HEIGHT)
+  * y = (i - z * WIDTH * HEIGHT) / WIDTH;
   * x = i - WIDTH * (y + HEIGHT * z);
   */
-  val width = width()
   val height = height()
+  val width = width()
   val channels = channels()
-  return mk.d3array(height, width, channels) { i ->
-    val z: Int = i / (width * height)
-    val y: Int = (i - z * width * height) / width
-    val x: Int = i - width * (y + height * z)
+  return mk.d3arrayIndices(height, width, channels) { y, x, z ->
     this[y, x, z]
   }
 }
 
-fun Mat.toD2Array(): NDArray<DoubleArray, D2> {
-  val w = width()
-  val h = height()
-  return mk.d2array(h, w) { i ->
-    val y = i / w
-    val x = i % w
-    this[y, x]
-  }
-}
-
-@JvmName("toMatDoubleD3")
-fun NDArray<Double, D3>.toMat(type: Int) = Mat.zeros(shape[0], shape[1], type).also { mat ->
-  forEachMultiIndexed { (y, x, z), value ->
-    mat[y, x, z] = value
-  }
-}
-
-@JvmName("toMatDoubleD2")
-fun NDArray<DoubleArray, D2>.toMat(type: Int) = Mat.zeros(shape, type).also { mat ->
-  forEachMultiIndexed { (y, x), value ->
-    mat[x, y] = value
+fun D3Array<Double>.toMat(type: Int) = Mat.ones(shape[0], shape[1], type).also { mat ->
+  for (y in 0 until shape[0]) {
+    for (x in 0 until shape[1]) {
+      mat[y, x] = this[y, x].toDoubleArray()
+    }
   }
 }

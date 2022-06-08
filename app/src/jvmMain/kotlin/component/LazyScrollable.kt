@@ -1,17 +1,15 @@
 package dev.petuska.fake.kamera.component
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,7 +27,8 @@ import dev.petuska.fake.kamera.util.rememberMutableStateOf
 fun LazyScrollable(
   itemCount: Int,
   modifier: Modifier = Modifier,
-  onClear: () -> Unit,
+  title: String? = null,
+  onClear: (() -> Unit)? = null,
   render: @Composable (Int) -> Unit
 ) {
   Box(
@@ -47,19 +46,24 @@ fun LazyScrollable(
     ) {
       stickyHeader {
         Box(
-          modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+          modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
         ) {
-          Text(
-            text = "Logs",
-            fontWeight = FontWeight.Bold,
-            fontSize = 1.5.em,
-            modifier = Modifier.padding(12.dp).clip(CircleShape).align(Alignment.CenterStart)
-          )
-          Icon(
-            imageVector = Icons.Default.Clear,
-            contentDescription = "clear",
-            modifier = Modifier.padding(12.dp).clip(CircleShape).clickable(onClick = onClear).align(Alignment.CenterEnd)
-          )
+          if (title != null) {
+            Text(
+              text = title,
+              fontWeight = FontWeight.Bold,
+              fontSize = 1.25.em,
+              modifier = Modifier.padding(6.dp).align(Alignment.CenterStart)
+            )
+          }
+          if (onClear != null) {
+            Icon(
+              imageVector = Icons.Default.Clear,
+              contentDescription = "clear",
+              modifier = Modifier.padding(6.dp).clip(CircleShape).clickable(onClick = onClear)
+                .align(Alignment.CenterEnd)
+            )
+          }
         }
       }
       items(itemCount) {

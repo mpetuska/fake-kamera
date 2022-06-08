@@ -3,6 +3,7 @@ package dev.petuska.fake.kamera.component
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.DropdownMenu
@@ -26,6 +27,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.unit.dp
 import java.awt.Cursor
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -43,6 +45,7 @@ fun <T> ExposedDropdownMenu(
   Box(
     modifier = modifier
       .wrapContentWidth(Alignment.Start)
+      .padding(0.dp)
   ) {
     OutlinedTextField(
       value = itemLabelBuilder(selected),

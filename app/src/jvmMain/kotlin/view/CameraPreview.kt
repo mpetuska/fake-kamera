@@ -4,8 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
@@ -37,11 +39,11 @@ fun CameraPreview(
     }
   }
   Box(
-    modifier =
-    Modifier.border(BorderStroke(1.dp, Color.Gray))
+    modifier = Modifier
+      .clip(RoundedCornerShape(10.dp))
+      .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(10.dp))
       .width(640.dp)
       .height(480.dp)
-      .padding(0.dp)
   ) {
     image?.let {
       Image(

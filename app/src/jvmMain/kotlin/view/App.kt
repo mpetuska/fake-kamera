@@ -45,7 +45,7 @@ fun App() = LogProvider {
       val od = outputDevice
       if (id != null && od != null) {
         logger.info { "Launching Stream: $id -> $od" }
-        val ss = StreamService(id, od, fps)
+        val ss = StreamService(factory, id, od, fps)
         launch(Dispatchers.IO) { ss.stream(effect) }.invokeOnCompletion { ss.close() }
       }
     }
@@ -53,6 +53,7 @@ fun App() = LogProvider {
   MaterialTheme {
     Column(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
       CameraSelector()
+      Spacer(modifier = Modifier.padding(5.dp))
       Controls(
         streaming = streaming,
         previewing = previewing,
@@ -60,23 +61,25 @@ fun App() = LogProvider {
         inputDevicePath = inputDevicePath,
         outputDevicePath = outputDevicePath,
         onStreaming = {
-          streaming = false
-          previewing = !previewing
-        },
-        onPreviewing = {
           previewing = false
           streaming = !streaming
-          previewingStream = true
+        },
+        onPreviewing = {
+          previewing = !previewing
+          streaming = false
         },
         onPreviewingStream = {
           previewing = false
           previewingStream = !previewingStream
         }
       )
+      Spacer(modifier = Modifier.padding(5.dp))
       Row(modifier = Modifier.wrapContentSize().align(Alignment.CenterHorizontally)) {
         CameraPreview(inputDevice, previewing, fps)
+        Spacer(modifier = Modifier.padding(5.dp))
         CameraPreview(outputDevice?.toInput(), streaming && previewingStream, fps)
       }
+      Spacer(modifier = Modifier.padding(5.dp))
       Logs()
     }
   }

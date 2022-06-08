@@ -17,16 +17,15 @@ fun Controls(
   previewingStream: Boolean,
   inputDevicePath: String?,
   outputDevicePath: String?,
-  onStreaming: () -> Unit,
   onPreviewing: () -> Unit,
+  onStreaming: () -> Unit,
   onPreviewingStream: () -> Unit,
 ) {
   Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
     FakeCameraCreator()
     Button(
-      onClick = onStreaming,
-      colors =
-      if (previewing) {
+      onClick = onPreviewing,
+      colors = if (previewing) {
         ButtonDefaults.buttonColors(
           containerColor = Color.Red,
         )
@@ -38,7 +37,7 @@ fun Controls(
       Text(if (!previewing) "Preview Camera" else "Stop Camera Preview")
     }
     Button(
-      onClick = onPreviewing,
+      onClick = onStreaming,
       colors = if (streaming) {
         ButtonDefaults.buttonColors(
           containerColor = Color.Red,
