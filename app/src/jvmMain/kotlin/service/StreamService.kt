@@ -3,30 +3,29 @@ package dev.petuska.fake.kamera.service
 import dev.petuska.fake.kamera.effect.FrameEffect
 import dev.petuska.fake.kamera.util.VideoDeviceInput
 import dev.petuska.fake.kamera.util.VideoDeviceOutput
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import org.opencv.core.Mat
+import java.io.Closeable
 import kotlin.time.Duration.Companion.seconds
 
 class StreamService(
   private val input: VideoDeviceInput,
   private val output: VideoDeviceOutput,
   fps: UInt
-) : AutoCloseable {
+) : Closeable {
   private val frameDelay = 1.seconds / fps.toInt()
 
-  suspend fun stream(vararg effects: FrameEffect) = stream(effects.toSet())
-
-  suspend fun stream(effects: Set<FrameEffect>) {
+  @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+  suspend fun stream(effect: FrameEffect) {
     input.open()
     output.open()
     input.stream()
       .filterNot(Mat::empty)
-      .let { effects.fold(it) { flow, effect -> flow.map(effect::invoke) } }
-      .collectLatest {
-        delay(frameDelay)
-        output.write(it)
-      }
+      .debounce(frameDelay)
+      .mapLatest(effect)
+      .collect(output::write)
   }
 
   override fun close() {

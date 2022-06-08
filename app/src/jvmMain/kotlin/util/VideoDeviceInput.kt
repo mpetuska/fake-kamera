@@ -2,44 +2,43 @@ package dev.petuska.fake.kamera.util
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.kodein.log.Logger
+import org.kodein.log.LoggerFactory
+import org.kodein.log.newLogger
 import org.opencv.core.Mat
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 
-class VideoDeviceInput(override val path: String, vararg options: Pair<Int, Double>) : VideoDevice {
-  constructor(
-    path: String,
-    width: Int,
-    height: Int,
-    channels: Int,
-    fps: Int = 60,
-    vararg options: Pair<Int, Double>
-  ) : this(
-    path,
-    Videoio.CAP_PROP_FRAME_WIDTH to width.toDouble(),
-    Videoio.CAP_PROP_FRAME_HEIGHT to height.toDouble(),
-    Videoio.CAP_PROP_CHANNEL to channels.toDouble(),
-    Videoio.CAP_PROP_FPS to fps.toDouble(),
-    *options
-  )
+@Suppress("LongParameterList")
+class VideoDeviceInput(
+  private val factory: LoggerFactory,
+  override val path: String,
+  override val fps: Int,
+  override val width: Int,
+  override val height: Int,
+  override val channels: Int = 3,
+  vararg val options: Pair<Int, Double>
+) : VideoDevice {
+  override fun toString(): String = "VideoDeviceInput[$path]"
+  private val logger: Logger = factory.newLogger(this::class)
 
   private val vc = VideoCapture().apply {
+    val options = options.toList() + listOf(
+      Videoio.CAP_PROP_FRAME_WIDTH to width.toDouble(),
+      Videoio.CAP_PROP_FRAME_HEIGHT to height.toDouble(),
+      Videoio.CAP_PROP_CHANNEL to channels.toDouble(),
+      Videoio.CAP_PROP_FPS to fps.toDouble()
+    )
     options.forEach { (k, v) -> set(k, v) }
     release()
   }
 
-  override var width: Int = 0
-    private set
-  override var height: Int = 0
-    private set
-  override var channels: Int = 0
-    private set
   override val opened: Boolean
     get() = vc.isOpened
 
   override suspend fun open(fps: UInt?): Boolean {
     return if (!opened) {
-      println("Opening VideoDeviceInput[$path]")
+      logger.info { "Opening $this" }
       fps?.let { vc.set(Videoio.CAP_PROP_FPS, fps.toDouble()) }
       vc.open(path)
     } else opened
@@ -53,19 +52,37 @@ class VideoDeviceInput(override val path: String, vararg options: Pair<Int, Doub
   }
 
   override fun close() {
-    println("Closing VideoDeviceInput[$path]")
-    vc.release()
+    if (opened) {
+      logger.info { "Closing $this" }
+      vc.release()
+    }
   }
 
-  suspend fun read(): Mat {
-//    Mat().also(vc::read)
+  fun read(): Mat {
     val mat = Mat()
     if (!vc.read(mat)) {
-      println("VideoDeviceInput[$path] produced no frame")
+      logger.warning { "$this produced no frame" }
     }
     return mat
   }
 
-  override fun toOutput() = VideoDeviceOutput(path, width, height)
-  override fun toInput(): VideoDeviceInput = this
+  override fun toOutput(channels: Int) = VideoDeviceOutput(
+    factory = factory,
+    path = path,
+    width = width,
+    height = height,
+    channels = channels,
+    fps = fps,
+  )
+
+  override fun toInput(channels: Int): VideoDeviceInput =
+    VideoDeviceInput(
+      factory = factory,
+      path = path,
+      width = width,
+      height = height,
+      channels = channels,
+      fps = fps,
+      options = options
+    )
 }

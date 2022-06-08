@@ -1,32 +1,34 @@
 package dev.petuska.fake.kamera.component
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.semantics.Role
 import java.awt.Cursor
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun <T> ExposedDropdownMenu(
   items: List<T>,
@@ -37,24 +39,29 @@ fun <T> ExposedDropdownMenu(
   label: @Composable (() -> Unit)? = null
 ) {
   var expanded by remember { mutableStateOf(false) }
-  Box(modifier = modifier.wrapContentWidth(Alignment.Start)) {
+  var expandedFromInput by remember { mutableStateOf(false) }
+  Box(
+    modifier = modifier
+      .wrapContentWidth(Alignment.Start)
+  ) {
     OutlinedTextField(
       value = itemLabelBuilder(selected),
       label = label,
       onValueChange = {},
       readOnly = true,
-      modifier =
-      modifier.fillMaxWidth().pointerHoverIcon(PointerIcon(Cursor.getDefaultCursor()), true),
+      modifier = modifier.fillMaxWidth()
+        .pointerHoverIcon(PointerIcon(Cursor(Cursor.HAND_CURSOR)), true)
+        .onPointerEvent(PointerEventType.Release) {
+          expandedFromInput = !expandedFromInput
+          expanded = !expanded && expandedFromInput
+        },
       singleLine = true,
       trailingIcon = {
         val rotation by animateFloatAsState(if (expanded) 180f else 0f)
         Icon(
           imageVector = Icons.Default.ArrowDropDown,
           contentDescription = "select",
-          modifier =
-          Modifier.rotate(rotation)
-            .clip(CircleShape)
-            .clickable(role = Role.Button, onClick = { expanded = true })
+          modifier = Modifier.rotate(rotation).clip(CircleShape)
         )
       }
     )
@@ -68,6 +75,7 @@ fun <T> ExposedDropdownMenu(
           onClick = {
             onSelectionChange(item)
             expanded = false
+            expandedFromInput = false
           }
         ) { Text(text = itemLabelBuilder(item)) }
       }

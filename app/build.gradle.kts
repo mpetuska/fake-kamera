@@ -1,3 +1,5 @@
+@file:Suppress("REQUIRES_OPT_IN")
+
 plugins {
   id("convention.app-compose")
 }
@@ -25,7 +27,11 @@ kotlin {
       }
     }
     jvmMain {
+      @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
       dependencies {
+        implementation(compose.material3)
+        implementation("org.kodein.log:kodein-log:_")
+        implementation("org.jetbrains.kotlinx:multik-default:_")
         implementation("org.reduxkotlin:redux-kotlin-threadsafe:_")
         implementation("org.reduxkotlin:redux-kotlin-thunk:_")
         implementation("org.kodein.di:kodein-di-framework-compose:_")

@@ -19,14 +19,15 @@ object NativeUtils {
    * is deleted after exiting. Method uses String as filename because the pathname is "abstract",
    * not system-dependent.
    *
-   * @param filename The filename inside JAR as absolute path (beginning with '/'), e.g.
-   * /package/File.ext
+   * @param jarpath The filename inside JAR as absolute path (beginning with '/'), e.g. /package/File.ext
+   * @param libs to load
    * @throws IOException If temporary file creation or read/write operation fails
    * @throws IllegalArgumentException If source file (param path) does not exist
    * @throws IllegalArgumentException If the path is not absolute or if the filename is shorter than
    * three characters (restriction of {@see File#createTempFile(java.lang.String,
    * * java.lang.String)}).
    */
+  @Suppress("ThrowsCount")
   fun loadLibraryFromJar(jarpath: String, libs: Array<String>) {
     val libspath: File = File.createTempFile("libs", "")
     if (!libspath.delete()) {
@@ -80,6 +81,7 @@ object NativeUtils {
     usrPathsField.isAccessible = true
 
     // get array of paths
+    @Suppress("UNCHECKED_CAST")
     val paths = usrPathsField.get(null) as Array<String>
 
     // check if the path to add is already present

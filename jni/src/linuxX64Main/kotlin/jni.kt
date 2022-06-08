@@ -1,20 +1,45 @@
 @file:Suppress(
   "Unused",
   "LongParameterList",
-  "UNUSED_PARAMETER",
   "FunctionParameterNaming",
-  "FunctionOnlyReturningConstant",
+  "UNUSED_PARAMETER",
 )
 
-import jni.*
-import kotlinx.cinterop.*
-import platform.posix.*
-import videodev2.*
+import jni.JNIEnvVar
+import jni.jboolean
+import jni.jbyteArray
+import jni.jint
+import jni.jobject
+import jni.jstring
+import kotlinx.cinterop.UByteVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.sizeOf
+import kotlinx.cinterop.toByte
+import kotlinx.cinterop.toKStringFromUtf8
+import kotlinx.cinterop.value
+import platform.posix.O_RDWR
+import platform.posix.close
+import platform.posix.fprintf
+import platform.posix.ioctl
+import platform.posix.memset
+import platform.posix.open
+import platform.posix.stderr
+import platform.posix.write
+import videodev2.V4L2_BUF_TYPE_VIDEO_OUTPUT
+import videodev2.V4L2_FIELD_NONE
+import videodev2.V4L2_PIX_FMT_YUYV
+import videodev2.VIDIOC_G_FMT
+import videodev2.VIDIOC_S_FMT
+import videodev2.v4l2_format
 
 private fun printError(error: String) {
   fprintf(stderr, "%s\n", error)
 }
 
+@Suppress("ReturnCount")
 @CName("Java_dev_petuska_fake_kamera_jni_FakeCam_open")
 fun fakeCamOpen(
   env: JNIEnvVar,
@@ -31,9 +56,9 @@ fun fakeCamOpen(
     env.GetStringUTFChars(device, zero.ptr)
   }
   val output = out?.toKStringFromUtf8()
-  val dev_fd = open(output, O_RDWR)
+  val devFd = open(output, O_RDWR)
   env.ReleaseStringUTFChars(device, out)
-  if (dev_fd < 0) {
+  if (devFd < 0) {
     printError("ERROR: could not open output device! $output")
     return -2
   }
@@ -42,7 +67,7 @@ fun fakeCamOpen(
     val format = alloc<v4l2_format>()
     memset(format.ptr, 0, sizeOf<v4l2_format>().convert())
     format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT
-    if (ioctl(dev_fd, VIDIOC_G_FMT, format.ptr) < 0) {
+    if (ioctl(devFd, VIDIOC_G_FMT, format.ptr) < 0) {
       printError("ERROR: unable to get video format!")
       return -1
     }
@@ -54,12 +79,12 @@ fun fakeCamOpen(
     format.fmt.pix.sizeimage = frameSize.convert()
     format.fmt.pix.field = V4L2_FIELD_NONE.convert()
 
-    if (ioctl(dev_fd, VIDIOC_S_FMT, format.ptr) < 0) {
+    if (ioctl(devFd, VIDIOC_S_FMT, format.ptr) < 0) {
       printError("ERROR: unable to set video format!")
       return -1
     }
   }
-  return dev_fd
+  return devFd
 }
 
 @CName("Java_dev_petuska_fake_kamera_jni_FakeCam_writeFrame")

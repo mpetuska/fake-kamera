@@ -7,3 +7,8 @@ fun interface FrameEffect : (Mat) -> Mat {
     override fun invoke(frame: Mat): Mat = frame
   }
 }
+
+operator fun FrameEffect.plus(other: FrameEffect): FrameEffect = FrameEffect {
+  this(it)
+  other(it)
+}

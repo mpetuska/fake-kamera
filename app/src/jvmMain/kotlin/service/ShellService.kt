@@ -6,18 +6,21 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.future.await
 
-class ShellService {
-  suspend fun executeSudo(cmd: String, password: String) = execute("echo $password | sudo -S $cmd")
-  suspend fun execute(cmd: String): Flow<String> = flow {
+object ShellService {
+  suspend fun executeSudo(cmd: String, password: String) = execute("echo $password | sudo -S $cmd", true)
+  suspend fun execute(cmd: String, sensitive: Boolean = false): Flow<Pair<Boolean, String>> = flow {
     val command = arrayOf("/bin/bash", "-c", cmd)
     val pb = Runtime.getRuntime().exec(command)
     pb.onExit().await()
-    if (pb.exitValue() == 0) {
-      pb.inputStream.bufferedReader().useLines { it.forEach { line -> emit(line) } }
-    } else {
-      throw IllegalStateException(
-        "Command `$cmd` exited with non-zero value ${pb.exitValue()}"
-      )
+    pb.inputReader().useLines { it.forEach { line -> emit(false to line) } }
+    pb.errorReader().useLines {
+      it.forEach { line ->
+        if (!line.startsWith("[sudo]")) emit(true to line)
+      }
+    }
+    if (pb.exitValue() != 0) {
+      val safeCmd = if (sensitive) cmd.replace(".".toRegex(), "*") else cmd
+      emit(true to "Command `$safeCmd` exited with non-zero value ${pb.exitValue()}")
     }
   }.flowOn(Dispatchers.IO)
 }

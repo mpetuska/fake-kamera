@@ -4,13 +4,11 @@ config:
 complexity:
   LongMethod:
     ignoreAnnotated:
-      - Showcase
-  TooManyFunctions:
-    ignoreAnnotated:
-      - MDCExternalAPI
+      - CName
+      - Composable
   LongParameterList:
     ignoreAnnotated:
-      - MDCDsl
+      - CName
       - Composable
 
 comments:
@@ -39,7 +37,10 @@ naming:
   FunctionNaming:
     ignoreAnnotated:
       - Composable
-
+      - CName
+  FunctionParameterNaming:
+    ignoreAnnotated:
+      - CName
 style:
   WildcardImport:
     active: false
@@ -51,7 +52,7 @@ style:
     active: false
   UnusedPrivateMember:
     ignoreAnnotated:
-      - MDCExternalAPI
+      - CName
 
 formatting:
   Filename:
