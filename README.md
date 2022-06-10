@@ -1,12 +1,20 @@
-```bash
-sudo apt install v4l2loopback-dkms v4l2loopback-utils ffmpeg
-sudo dnf -y install ffmpeg v4l2loopback
+## References
+* https://github.com/diddlesnaps/fakecam/blob/master/src/fakecam/capture.py
+* https://elder.dev/posts/open-source-virtual-background/
 
-sudo apt install libopencv-dev # to build
-sudo dnf install opencv-devel # to build
+## Developer setup
+
+### Dependencies
+```bash
+sudo apt -y install v4l2loopback-dkms v4l2loopback-utils ffmpeg
+sudo dnf -y install v4l2loopback ffmpeg
+
+sudo apt -y install libopencv-dev # to build
+sudo dnf -y install opencv-devel # to build
 
 ```
 
+### Utilities
 ```bash
 ls /dev | grep video
 v4l2-ctl --list-devices
