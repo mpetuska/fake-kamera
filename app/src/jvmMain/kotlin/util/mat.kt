@@ -71,6 +71,7 @@ operator fun Mat.get(y: Int, x: Int, z: Int): Double = this[y, x][z]
 
 fun Mat.clone(builder: (mat: Mat) -> Unit): Mat = clone().apply(builder)
 fun Mat(builder: (mat: Mat) -> Unit): Mat = Mat().apply(builder)
+fun Mat.print(name: String = "mat") = println("[$name] size=${size()} $this")
 
 fun Mat.toD3Array(): NDArray<Double, D3> {
   /*

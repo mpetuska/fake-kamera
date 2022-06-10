@@ -6,9 +6,9 @@ fun interface FrameEffect : (Mat) -> Mat {
   object NoOp : FrameEffect {
     override fun invoke(frame: Mat): Mat = frame
   }
-}
 
-operator fun FrameEffect.plus(other: FrameEffect): FrameEffect = FrameEffect {
-  this(it)
-  other(it)
+  operator fun plus(other: FrameEffect): FrameEffect = FrameEffect {
+    this(it)
+    other(it)
+  }
 }

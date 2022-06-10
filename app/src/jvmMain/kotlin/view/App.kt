@@ -63,6 +63,7 @@ fun App() = LogProvider {
         onStreaming = {
           previewing = false
           streaming = !streaming
+          previewingStream = streaming
         },
         onPreviewing = {
           previewing = !previewing
